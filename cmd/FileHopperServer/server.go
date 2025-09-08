@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/Unfield/FileHopper/internal/auth"
 	"github.com/Unfield/FileHopper/internal/db"
 	"github.com/Unfield/cascade"
 )
@@ -37,4 +38,11 @@ func main() {
 	}
 
 	defer dbDriver.Close()
+
+	authenticator, err := auth.NewAuthenticator(dbDriver)
+	if err != nil {
+		panic(err)
+	}
+
+	_ = authenticator
 }

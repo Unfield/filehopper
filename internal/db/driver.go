@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/Unfield/FileHopper/internal/auth"
+	"github.com/Unfield/FileHopper/data"
 	"github.com/Unfield/FileHopper/internal/db/drivers"
 )
 
@@ -11,10 +11,10 @@ type DBDriver interface {
 	Init(dsn string) error
 	Close() error
 
-	CreateUser(u auth.User) error
-	GetUser(username string) (*auth.User, error)
-	ListUsers() ([]auth.User, error)
-	UpdateUser(u auth.User) error
+	CreateUser(u data.User) error
+	GetUser(username string) (*data.User, error)
+	ListUsers() ([]data.User, error)
+	UpdateUser(u data.User) error
 	DeleteUser(username string) error
 }
 

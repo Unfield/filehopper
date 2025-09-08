@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Unfield/FileHopper/internal/auth"
+	"github.com/Unfield/FileHopper/data"
 	_ "modernc.org/sqlite"
 )
 
@@ -27,7 +27,7 @@ func (s *SqliteDriver) Init(dsn string) error {
 	_, err = s.db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id TEXT PRIMARY KEY,
-			username TEXT NOT NULL,
+			username TEXT NOT NULL UNIQUE,
 			password_hash TEXT NOT NULL,
 			roles TEXT NOT NULL,
 			home_dir TEXT
@@ -41,20 +41,20 @@ func (s *SqliteDriver) Close() error {
 	return s.db.Close()
 }
 
-func (s *SqliteDriver) CreateUser(u auth.User) error {
-	_, err := s.db.Exec("INSERT INTO users (id, username, password_hash, roles, home_dir VALUES (?,?,?,?,?)",
+func (s *SqliteDriver) CreateUser(u data.User) error {
+	_, err := s.db.Exec("INSERT INTO users (id, username, password_hash, roles, home_dir) VALUES (?,?,?,?,?)",
 		u.ID, u.Username, u.HashedPassword, strings.Join(u.Roles, ","), u.HomeDir,
 	)
 	return err
 }
 
-func (s *SqliteDriver) GetUser(username string) (*auth.User, error) {
+func (s *SqliteDriver) GetUser(username string) (*data.User, error) {
 	row := s.db.QueryRow("SELECT * FROM users WHERE username=?", username)
 	var uid, uname, password_hash, roles, home_dir string
 	if err := row.Scan(&uid, &uname, &password_hash, &roles, &home_dir); err != nil {
 		return nil, err
 	}
-	return &auth.User{
+	return &data.User{
 		ID:             uid,
 		Username:       uname,
 		HashedPassword: password_hash,
@@ -63,20 +63,20 @@ func (s *SqliteDriver) GetUser(username string) (*auth.User, error) {
 	}, nil
 }
 
-func (s *SqliteDriver) ListUsers() ([]auth.User, error) {
-	rows, err := s.db.Query("SELECT username, password_hash, roles, home_dir FROM users")
+func (s *SqliteDriver) ListUsers() ([]data.User, error) {
+	rows, err := s.db.Query("SELECT id, username, password_hash, roles, home_dir FROM users")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var users []auth.User
+	var users []data.User
 	for rows.Next() {
 		var uid, uname, password_hash, roles, home_dir string
 		if err := rows.Scan(&uid, &uname, &password_hash, &roles, &home_dir); err != nil {
 			return nil, err
 		}
-		users = append(users, auth.User{
+		users = append(users, data.User{
 			ID:             uid,
 			Username:       uname,
 			HashedPassword: password_hash,
@@ -84,10 +84,11 @@ func (s *SqliteDriver) ListUsers() ([]auth.User, error) {
 			HomeDir:        home_dir,
 		})
 	}
+
 	return users, rows.Err()
 }
 
-func (s *SqliteDriver) UpdateUser(u auth.User) error {
+func (s *SqliteDriver) UpdateUser(u data.User) error {
 	_, err := s.db.Exec(
 		"UPDATE users SET password_hash=?, roles=?, home_dir=? WHERE username=?",
 		u.HashedPassword, strings.Join(u.Roles, ","), u.HomeDir, u.Username,
