@@ -32,6 +32,14 @@ func (s *SqliteDriver) Init(dsn string) error {
 			roles TEXT NOT NULL,
 			home_dir TEXT
 		);
+
+		CREATE TABLE IF NOT EXISTS quota (
+		    id TEXT PRIMARY KEY,
+		    user_id TEXT NOT NULL,
+		    type TEXT NOT NULL,
+		    max INTEGER NOT NULL,
+		    used INTEGER NOT NULL
+		);
 	`)
 
 	return err
@@ -49,7 +57,7 @@ func (s *SqliteDriver) CreateUser(u data.User) error {
 }
 
 func (s *SqliteDriver) GetUser(username string) (*data.User, error) {
-	row := s.db.QueryRow("SELECT * FROM users WHERE username=?", username)
+	row := s.db.QueryRow("SELECT * FROM users WHERE username = ?", username)
 	var uid, uname, password_hash, roles, home_dir string
 	if err := row.Scan(&uid, &uname, &password_hash, &roles, &home_dir); err != nil {
 		return nil, err
@@ -90,13 +98,49 @@ func (s *SqliteDriver) ListUsers() ([]data.User, error) {
 
 func (s *SqliteDriver) UpdateUser(u data.User) error {
 	_, err := s.db.Exec(
-		"UPDATE users SET password_hash=?, roles=?, home_dir=? WHERE username=?",
+		"UPDATE users SET password_hash = ?, roles = ?, home_dir = ? WHERE username = ?",
 		u.HashedPassword, strings.Join(u.Roles, ","), u.HomeDir, u.Username,
 	)
 	return err
 }
 
 func (s *SqliteDriver) DeleteUser(username string) error {
-	_, err := s.db.Exec("DELETE FROM users WHERE username=?", username)
+	_, err := s.db.Exec("DELETE FROM users WHERE username = ?", username)
+	return err
+}
+
+func (s *SqliteDriver) CreateQuota(q data.Quota) error {
+	_, err := s.db.Exec("INSERT INTO quota (id, user_id, type, max, used) VALUES (?,?,?,?,?)",
+		q.ID, q.UserID, q.Type, q.Max, q.Used,
+	)
+	return err
+}
+
+func (s *SqliteDriver) GetQuota(userId string) (*data.Quota, error) {
+	row := s.db.QueryRow("SELECT id, user_id, type, max, used FROM quota WHERE user_id = ?", userId)
+	var id, _userId, _type string
+	var max, used int64
+	if err := row.Scan(&id, &_userId, &_type, &max, &used); err != nil {
+		return nil, err
+	}
+	return &data.Quota{
+		ID:     id,
+		UserID: _userId,
+		Type:   data.LimitType(_type),
+		Max:    max,
+		Used:   max,
+	}, nil
+}
+
+func (s *SqliteDriver) UpdateQuota(q data.Quota) error {
+	_, err := s.db.Exec(
+		"UPDATE quota SET type = ?, max = ?, used = ? WHERE id = ?",
+		q.Type, q.Max, q.Used, q.ID,
+	)
+	return err
+}
+
+func (s *SqliteDriver) DeleteQuota(userId string) error {
+	_, err := s.db.Exec("DELETE * FROM quota WHERE user_id = ?", userId)
 	return err
 }

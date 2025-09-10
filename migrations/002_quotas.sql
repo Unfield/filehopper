@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS quota (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    max INTEGER NOT NULL,
+    used INTEGER NOT NULL,
+);

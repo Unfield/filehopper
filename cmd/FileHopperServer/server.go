@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
-	"github.com/Unfield/FileHopper/internal/auth"
 	"github.com/Unfield/FileHopper/internal/db"
-	"github.com/Unfield/FileHopper/internal/sftp"
 	"github.com/Unfield/cascade"
 )
 
@@ -46,14 +43,42 @@ func main() {
 
 	defer dbDriver.Close()
 
-	authenticator, err := auth.NewAuthenticator(dbDriver)
-	if err != nil {
-		panic(err)
-	}
+	/*
+		authenticator, err := auth.NewAuthenticator(dbDriver)
+		if err != nil {
+			panic(err)
+		}
+	*/
 
-	sftpServer := sftp.NewSFTPServer(fmt.Sprintf("%s:%d", cfg.SFTP.Hostname, cfg.SFTP.Port), authenticator, &dbDriver, cfg.RootDir)
-	err = sftpServer.Start()
-	if err != nil {
-		panic(err)
-	}
+	/*
+		user, err := authenticator.CreateUser("admin", "admin", "unfields_files", []string{"default"})
+		if err != nil {
+			panic("failed to create user")
+		}
+
+		quotaId, err := utils.GenerateNanoid()
+		if err != nil {
+			panic("failed to generate quota id")
+		}
+
+		userQuota := data.Quota{
+			ID:     quotaId,
+			UserID: user.ID,
+			Type:   data.LimitStorage,
+			Max:    0,
+			Used:   0,
+		}
+
+		if err := dbDriver.CreateQuota(userQuota); err != nil {
+			panic("failed to create quota")
+		}
+	*/
+
+	/*
+		sftpServer := sftp.NewSFTPServer(fmt.Sprintf("%s:%d", cfg.SFTP.Hostname, cfg.SFTP.Port), authenticator, &dbDriver, cfg.RootDir)
+		err = sftpServer.Start()
+		if err != nil {
+			panic(err)
+		}
+	*/
 }

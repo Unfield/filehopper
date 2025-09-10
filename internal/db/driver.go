@@ -16,6 +16,11 @@ type DBDriver interface {
 	ListUsers() ([]data.User, error)
 	UpdateUser(u data.User) error
 	DeleteUser(username string) error
+
+	CreateQuota(q data.Quota) error
+	GetQuota(userId string) (*data.Quota, error)
+	UpdateQuota(q data.Quota) error
+	DeleteQuota(userId string) error
 }
 
 func LoadDriver(driver string) (DBDriver, error) {
